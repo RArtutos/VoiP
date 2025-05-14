@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 
 const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
   const navigate = useNavigate();
-  const { crearTicket, clientes, currentUser, canCreateTicketForDepartment } = useStore();
+  const { crearTicket, clientes, currentUser } = useStore();
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
     clienteId: clienteId || '',
-    departamento: currentUser?.rol === 'admin' ? 'tecnico' : currentUser?.departamento || 'tecnico',
+    departamento: currentUser?.departamento || '',
     problema: ''
   });
 
@@ -24,6 +24,11 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
       setError(err instanceof Error ? err.message : 'Error al crear el ticket');
     }
   };
+
+  // Si el usuario no es admin, solo puede crear tickets para su departamento
+  const departamentos = currentUser?.rol === 'admin' 
+    ? ['tecnico', 'ventas', 'informacion', 'general']
+    : [currentUser?.departamento || ''];
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -67,18 +72,13 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
             className="w-full p-2 border rounded"
             disabled={currentUser?.rol !== 'admin'}
           >
-            <option value="tecnico" disabled={!canCreateTicketForDepartment('tecnico')}>
-              Soporte Técnico
-            </option>
-            <option value="ventas" disabled={!canCreateTicketForDepartment('ventas')}>
-              Ventas
-            </option>
-            <option value="informacion" disabled={!canCreateTicketForDepartment('informacion')}>
-              Información
-            </option>
-            <option value="general" disabled={!canCreateTicketForDepartment('general')}>
-              General
-            </option>
+            {departamentos.map(dep => (
+              <option key={dep} value={dep}>
+                {dep === 'tecnico' ? 'Soporte Técnico' :
+                 dep === 'ventas' ? 'Ventas' :
+                 dep === 'informacion' ? 'Información' : 'General'}
+              </option>
+            ))}
           </select>
         </div>
 

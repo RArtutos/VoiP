@@ -16,7 +16,7 @@ interface AppState {
   actualizarTicket: (ticketId: string, estado: string, nota?: string) => void;
   crearCliente: (cliente: Omit<Cliente, 'id' | 'fechaRegistro'>) => Cliente;
   actualizarCliente: (id: string, cliente: Partial<Cliente>) => void;
-  crearUsuario: (usuario: Omit<Usuario, 'id' | 'password'> & { password: string }) => Usuario;
+  crearUsuario: (usuario: Omit<Usuario, 'id'> & { password: string }) => Usuario;
   getTicketsFiltrados: () => Ticket[];
   canCreateTicketForDepartment: (departamento: string) => boolean;
 }
@@ -29,7 +29,7 @@ export const useStore = create<AppState>((set, get) => ({
   usuarios: db.usuarios,
   
   login: (credentials) => {
-    const usuario = db.usuarios.find(u => 
+    const usuario = get().usuarios.find(u => 
       u.nombreUsuario === credentials.username && 
       u.password === credentials.password
     );
@@ -160,6 +160,7 @@ export const useStore = create<AppState>((set, get) => ({
   canCreateTicketForDepartment: (departamento) => {
     const { currentUser } = get();
     if (!currentUser) return false;
-    return currentUser.rol === 'admin' || currentUser.departamento === departamento;
+    if (currentUser.rol === 'admin') return true;
+    return currentUser.departamento === departamento;
   }
 }));
