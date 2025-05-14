@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { Search, UserPlus, Users } from 'lucide-react';
 import { useStore } from '../store';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Clientes: React.FC = () => {
+  const navigate = useNavigate();
   const { clientes } = useStore();
   const [busqueda, setBusqueda] = useState('');
   
-  // Filtrar clientes según la búsqueda
   const clientesFiltrados = clientes.filter(cliente => 
     cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     cliente.numeroCliente.toLowerCase().includes(busqueda.toLowerCase()) ||
     cliente.telefono.includes(busqueda)
   );
   
-  // Obtener etiqueta de estado con color
   const obtenerEtiquetaEstado = (estado: string) => {
     let color = '';
     switch (estado) {
@@ -42,7 +41,10 @@ const Clientes: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Directorio de Clientes</h1>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => navigate('/clientes/nuevo')}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <UserPlus className="w-5 h-5 mr-2" />
           <span>Nuevo Cliente</span>
         </button>

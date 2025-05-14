@@ -1,0 +1,54 @@
+{
+  "clientes": [
+    {
+      "id": "1001",
+      "nombre": "Juan Pérez",
+      "telefono": "555-123-4567",
+      "email": "juan.perez@ejemplo.com",
+      "direccion": "Calle Principal 123, CDMX, 04000",
+      "numeroCliente": "C1001",
+      "fechaRegistro": "2024-01-15",
+      "planActual": "Fibra 100MB",
+      "estado": "activo"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "T1001",
+      "clienteId": "1001",
+      "estado": "abierto",
+      "departamento": "tecnico",
+      "problema": "Conexión a internet intermitente",
+      "notas": ["Cliente reporta que la conexión se cae cada 30 minutos", "Se sugirió reiniciar el router"],
+      "fechaCreacion": "2025-06-10T14:30:00Z",
+      "fechaActualizacion": "2025-06-10T14:45:00Z",
+      "asignadoA": "agente1"
+    }
+  ],
+  "usuarios": [
+    {
+      "id": "admin1",
+      "nombreUsuario": "admin",
+      "nombre": "Administrador",
+      "rol": "admin",
+      "departamento": "general",
+      "password": "admin123"
+    },
+    {
+      "id": "agente1",
+      "nombreUsuario": "soporte1",
+      "nombre": "Juan Soporte",
+      "rol": "agente",
+      "departamento": "tecnico",
+      "password": "soporte123"
+    },
+    {
+      "id": "agente2",
+      "nombreUsuario": "ventas1",
+      "nombre": "María Ventas",
+      "rol": "agente",
+      "departamento": "ventas",
+      "password": "ventas123"
+    }
+  ]
+}

@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { Search, Plus, Ticket } from 'lucide-react';
 import { useStore } from '../store';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Tickets: React.FC = () => {
-  const { tickets, clientes } = useStore();
+  const navigate = useNavigate();
+  const { getTicketsFiltrados, clientes, currentUser } = useStore();
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [filtroDepartamento, setFiltroDepartamento] = useState('todos');
   
-  // Mapear IDs de clientes a nombres
+  const tickets = getTicketsFiltrados();
+  
   const mapaNombres = clientes.reduce((acc, cliente) => {
     acc[cliente.id] = cliente.nombre;
     return acc;
   }, {} as Record<string, string>);
   
-  // Filtrar tickets según búsqueda y filtros
   const ticketsFiltrados = tickets.filter(ticket => {
     const coincideBusqueda = 
       ticket.id.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -23,12 +23,10 @@ const Tickets: React.FC = () => {
       ticket.problema.toLowerCase().includes(busqueda.toLowerCase());
       
     const coincideEstado = filtroEstado === 'todos' || ticket.estado === filtroEstado;
-    const coincideDepartamento = filtroDepartamento === 'todos' || ticket.departamento === filtroDepartamento;
     
-    return coincideBusqueda && coincideEstado && coincideDepartamento;
+    return coincideBusqueda && coincideEstado;
   });
   
-  // Obtener etiqueta de estado con color
   const obtenerEtiquetaEstado = (estado: string) => {
     let color = '';
     switch (estado) {
@@ -55,7 +53,6 @@ const Tickets: React.FC = () => {
     );
   };
   
-  // Obtener etiqueta de departamento con color
   const obtenerEtiquetaDepartamento = (departamento: string) => {
     let color = '';
     let nombre = '';
@@ -89,7 +86,6 @@ const Tickets: React.FC = () => {
     );
   };
 
-  // Formatear fecha
   const formatearFecha = (fechaISO: string) => {
     const fecha = new Date(fechaISO);
     return fecha.toLocaleDateString('es-MX', {
@@ -105,7 +101,10 @@ const Tickets: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Gestión de Tickets</h1>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => navigate('/tickets/nuevo')}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <Plus className="w-5 h-5 mr-2" />
           <span>Nuevo Ticket</span>
         </button>
@@ -143,24 +142,6 @@ const Tickets: React.FC = () => {
               <option value="en-proceso">En proceso</option>
               <option value="resuelto">Resuelto</option>
               <option value="cerrado">Cerrado</option>
-            </select>
-          </div>
-          
-          <div>
-            <label htmlFor="filtroDepartamento" className="block text-sm font-medium text-gray-700 mb-1">
-              Departamento:
-            </label>
-            <select
-              id="filtroDepartamento"
-              className="rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filtroDepartamento}
-              onChange={(e) => setFiltroDepartamento(e.target.value)}
-            >
-              <option value="todos">Todos los departamentos</option>
-              <option value="tecnico">Soporte Técnico</option>
-              <option value="ventas">Ventas</option>
-              <option value="informacion">Información</option>
-              <option value="general">General</option>
             </select>
           </div>
         </div>
@@ -241,3 +222,5 @@ const Tickets: React.FC = () => {
 };
 
 export default Tickets;
+
+export default Tickets

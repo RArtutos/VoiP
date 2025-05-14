@@ -29,3 +29,8 @@ export interface Usuario {
   rol: 'admin' | 'agente';
   departamento: 'tecnico' | 'ventas' | 'informacion' | 'general';
 }
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}

@@ -10,6 +10,8 @@ import Tickets from './pages/Tickets';
 import Dashboard from './pages/Dashboard';
 import DetalleCliente from './pages/DetalleCliente';
 import DetalleTicket from './pages/DetalleTicket';
+import CrearCliente from './components/CrearCliente';
+import CrearTicket from './components/CrearTicket';
 
 // Protección de rutas
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,8 +37,10 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="clientes" element={<Clientes />} />
+          <Route path="clientes/nuevo" element={<CrearCliente />} />
           <Route path="clientes/:id" element={<DetalleCliente />} />
           <Route path="tickets" element={<Tickets />} />
+          <Route path="tickets/nuevo" element={<CrearTicket />} />
           <Route path="tickets/:id" element={<DetalleTicket />} />
         </Route>
         
@@ -46,4 +50,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

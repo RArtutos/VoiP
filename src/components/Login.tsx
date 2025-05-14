@@ -13,16 +13,18 @@ const Login: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validación simple
     if (!username || !password) {
       setError('Por favor ingrese su nombre de usuario y contraseña');
       return;
     }
     
-    // En producción, aquí iría la autenticación real
-    // Por ahora simplemente aceptamos cualquier usuario/contraseña
-    login(username);
-    navigate('/');
+    const success = login({ username, password });
+    
+    if (success) {
+      navigate('/');
+    } else {
+      setError('Usuario o contraseña incorrectos');
+    }
   };
 
   return (
@@ -79,10 +81,6 @@ const Login: React.FC = () => {
           >
             Iniciar Sesión
           </button>
-          
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>¿Olvidó su contraseña? Contacte al administrador del sistema.</p>
-          </div>
         </form>
       </div>
     </div>

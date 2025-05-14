@@ -1,33 +1,45 @@
 import { create } from 'zustand';
-import { Cliente, Ticket, Usuario } from '../types';
-import { clientesMock, ticketsMock } from '../data/mockData';
+import { Cliente, Ticket, Usuario, LoginCredentials } from '../types';
+import db from '../data/db.json';
 
 interface AppState {
-  // Estado de autenticación
   isLoggedIn: boolean;
-  currentUser: string | null;
-  
-  // Datos
+  currentUser: Usuario | null;
   clientes: Cliente[];
   tickets: Ticket[];
+  usuarios: Usuario[];
   
-  // Acciones
-  login: (username: string) => void;
+  login: (credentials: LoginCredentials) => boolean;
   logout: () => void;
   buscarCliente: (numeroCliente: string) => Cliente | null;
   crearTicket: (clienteId: string, departamento: string, problema: string) => string;
   actualizarTicket: (ticketId: string, estado: string, nota?: string) => void;
+  crearCliente: (cliente: Omit<Cliente, 'id' | 'fechaRegistro'>) => Cliente;
+  actualizarCliente: (id: string, cliente: Partial<Cliente>) => void;
+  crearUsuario: (usuario: Omit<Usuario, 'id'>) => Usuario;
+  getTicketsFiltrados: () => Ticket[];
 }
 
 export const useStore = create<AppState>((set, get) => ({
-  // Estado inicial
   isLoggedIn: false,
   currentUser: null,
-  clientes: clientesMock,
-  tickets: ticketsMock,
+  clientes: db.clientes,
+  tickets: db.tickets,
+  usuarios: db.usuarios,
   
-  // Acciones
-  login: (username) => set({ isLoggedIn: true, currentUser: username }),
+  login: (credentials) => {
+    const usuario = db.usuarios.find(u => 
+      u.nombreUsuario === credentials.username && 
+      u.password === credentials.password
+    );
+    
+    if (usuario) {
+      const { password, ...userWithoutPassword } = usuario;
+      set({ isLoggedIn: true, currentUser: userWithoutPassword });
+      return true;
+    }
+    return false;
+  },
   
   logout: () => set({ isLoggedIn: false, currentUser: null }),
   
@@ -51,7 +63,7 @@ export const useStore = create<AppState>((set, get) => ({
       notas: [],
       fechaCreacion: ahora,
       fechaActualizacion: ahora,
-      asignadoA: currentUser || undefined
+      asignadoA: currentUser?.id
     };
     
     set(state => ({
@@ -80,5 +92,57 @@ export const useStore = create<AppState>((set, get) => ({
         return t;
       })
     }));
+  },
+
+  crearCliente: (clienteData) => {
+    const id = `C${Date.now()}`;
+    const nuevoCliente: Cliente = {
+      ...clienteData,
+      id,
+      fechaRegistro: new Date().toISOString(),
+    };
+
+    set(state => ({
+      clientes: [...state.clientes, nuevoCliente]
+    }));
+
+    return nuevoCliente;
+  },
+
+  actualizarCliente: (id, datosActualizados) => {
+    set(state => ({
+      clientes: state.clientes.map(cliente => 
+        cliente.id === id ? { ...cliente, ...datosActualizados } : cliente
+      )
+    }));
+  },
+
+  crearUsuario: (usuarioData) => {
+    const id = `U${Date.now()}`;
+    const nuevoUsuario: Usuario = {
+      ...usuarioData,
+      id
+    };
+
+    set(state => ({
+      usuarios: [...state.usuarios, nuevoUsuario]
+    }));
+
+    return nuevoUsuario;
+  },
+
+  getTicketsFiltrados: () => {
+    const { tickets, currentUser } = get();
+    
+    if (!currentUser) return [];
+    
+    if (currentUser.rol === 'admin') {
+      return tickets;
+    }
+    
+    return tickets.filter(ticket => 
+      ticket.departamento === currentUser.departamento ||
+      ticket.asignadoA === currentUser.id
+    );
   }
 }));

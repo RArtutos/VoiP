@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { 
   ArrowLeft, 
@@ -9,20 +9,18 @@ import {
   Calendar, 
   Package, 
   Clock, 
-  Ticket 
+  Ticket,
+  Plus
 } from 'lucide-react';
 
 const DetalleCliente: React.FC = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { clientes, tickets } = useStore();
   
-  // Encontrar el cliente por ID
   const cliente = clientes.find(c => c.id === id);
-  
-  // Filtrar tickets del cliente
   const ticketsCliente = tickets.filter(t => t.clienteId === id);
   
-  // Formatear fecha
   const formatearFecha = (fechaISO: string) => {
     const fecha = new Date(fechaISO);
     return fecha.toLocaleDateString('es-MX', {
@@ -32,7 +30,6 @@ const DetalleCliente: React.FC = () => {
     });
   };
   
-  // Obtener etiqueta de estado con color
   const obtenerEtiquetaEstado = (estado: string) => {
     let color = '';
     switch (estado) {
@@ -59,7 +56,6 @@ const DetalleCliente: React.FC = () => {
     );
   };
   
-  // Si no se encuentra el cliente
   if (!cliente) {
     return (
       <div className="text-center py-12">
@@ -171,14 +167,12 @@ const DetalleCliente: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            <button className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center justify-center">
-              <Phone className="w-5 h-5 mr-2" />
-              Iniciar Llamada
-            </button>
-            
-            <button className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center">
-              <Ticket className="w-5 h-5 mr-2" />
-              Crear Ticket
+            <button 
+              onClick={() => navigate('/tickets/nuevo', { state: { clienteId: cliente.id } })}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              <span>Crear Ticket</span>
             </button>
           </div>
         </div>
