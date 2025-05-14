@@ -4,23 +4,36 @@ import { useNavigate } from 'react-router-dom';
 
 const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
   const navigate = useNavigate();
-  const { crearTicket, clientes } = useStore();
+  const { crearTicket, clientes, currentUser, canCreateTicketForDepartment } = useStore();
+  const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
     clienteId: clienteId || '',
-    departamento: 'tecnico',
+    departamento: currentUser?.rol === 'admin' ? 'tecnico' : currentUser?.departamento || 'tecnico',
     problema: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ticketId = crearTicket(formData.clienteId, formData.departamento, formData.problema);
-    navigate(`/tickets/${ticketId}`);
+    setError('');
+    
+    try {
+      const ticketId = crearTicket(formData.clienteId, formData.departamento, formData.problema);
+      navigate(`/tickets/${ticketId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear el ticket');
+    }
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-6">Crear Nuevo Ticket</h2>
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
         {!clienteId && (
@@ -52,11 +65,20 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
             value={formData.departamento}
             onChange={(e) => setFormData({...formData, departamento: e.target.value})}
             className="w-full p-2 border rounded"
+            disabled={currentUser?.rol !== 'admin'}
           >
-            <option value="tecnico">Soporte Técnico</option>
-            <option value="ventas">Ventas</option>
-            <option value="informacion">Información</option>
-            <option value="general">General</option>
+            <option value="tecnico" disabled={!canCreateTicketForDepartment('tecnico')}>
+              Soporte Técnico
+            </option>
+            <option value="ventas" disabled={!canCreateTicketForDepartment('ventas')}>
+              Ventas
+            </option>
+            <option value="informacion" disabled={!canCreateTicketForDepartment('informacion')}>
+              Información
+            </option>
+            <option value="general" disabled={!canCreateTicketForDepartment('general')}>
+              General
+            </option>
           </select>
         </div>
 

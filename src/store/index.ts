@@ -16,8 +16,9 @@ interface AppState {
   actualizarTicket: (ticketId: string, estado: string, nota?: string) => void;
   crearCliente: (cliente: Omit<Cliente, 'id' | 'fechaRegistro'>) => Cliente;
   actualizarCliente: (id: string, cliente: Partial<Cliente>) => void;
-  crearUsuario: (usuario: Omit<Usuario, 'id'>) => Usuario;
+  crearUsuario: (usuario: Omit<Usuario, 'id' | 'password'> & { password: string }) => Usuario;
   getTicketsFiltrados: () => Ticket[];
+  canCreateTicketForDepartment: (departamento: string) => boolean;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -49,7 +50,11 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   crearTicket: (clienteId, departamento, problema) => {
-    const { currentUser } = get();
+    const { currentUser, canCreateTicketForDepartment } = get();
+    
+    if (!currentUser || !canCreateTicketForDepartment(departamento)) {
+      throw new Error('No tienes permisos para crear tickets en este departamento');
+    }
     
     const ahora = new Date().toISOString();
     const id = `T${Date.now()}`;
@@ -118,6 +123,12 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   crearUsuario: (usuarioData) => {
+    const { currentUser } = get();
+    
+    if (!currentUser || currentUser.rol !== 'admin') {
+      throw new Error('Solo los administradores pueden crear nuevos usuarios');
+    }
+
     const id = `U${Date.now()}`;
     const nuevoUsuario: Usuario = {
       ...usuarioData,
@@ -144,5 +155,11 @@ export const useStore = create<AppState>((set, get) => ({
       ticket.departamento === currentUser.departamento ||
       ticket.asignadoA === currentUser.id
     );
+  },
+
+  canCreateTicketForDepartment: (departamento) => {
+    const { currentUser } = get();
+    if (!currentUser) return false;
+    return currentUser.rol === 'admin' || currentUser.departamento === departamento;
   }
 }));

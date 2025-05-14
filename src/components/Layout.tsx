@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Users, Ticket, LogOut, BarChart } from 'lucide-react';
+import { Users, Ticket, LogOut, BarChart, UserPlus } from 'lucide-react';
 import { useStore } from '../store';
 
 const Layout: React.FC = () => {
@@ -25,7 +25,7 @@ const Layout: React.FC = () => {
         </div>
         <div className="p-2">
           <p className="px-4 py-2 text-sm text-blue-300">
-            Agente: {currentUser}
+            Agente: {currentUser.nombre}
           </p>
         </div>
         <nav className="mt-6">
@@ -50,6 +50,15 @@ const Layout: React.FC = () => {
             <BarChart className="w-5 h-5 mr-3" />
             <span>Dashboard</span>
           </Link>
+          {currentUser.rol === 'admin' && (
+            <Link
+              to="/agentes"
+              className={`flex items-center px-4 py-3 text-blue-100 hover:bg-blue-700 transition-colors ${isActive('/agentes')}`}
+            >
+              <UserPlus className="w-5 h-5 mr-3" />
+              <span>Gestionar Agentes</span>
+            </Link>
+          )}
         </nav>
         <div className="absolute bottom-0 w-64 p-4">
           <button
@@ -72,4 +81,4 @@ const Layout: React.FC = () => {
   );
 };
 
-export default Layout
+export default Layout;

@@ -222,5 +222,3 @@ const Tickets: React.FC = () => {
 };
 
 export default Tickets;
-
-export default Tickets

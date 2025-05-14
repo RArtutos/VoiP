@@ -12,6 +12,7 @@ import DetalleCliente from './pages/DetalleCliente';
 import DetalleTicket from './pages/DetalleTicket';
 import CrearCliente from './components/CrearCliente';
 import CrearTicket from './components/CrearTicket';
+import Agentes from './pages/Agentes';
 
 // Protección de rutas
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,6 +43,7 @@ function App() {
           <Route path="tickets" element={<Tickets />} />
           <Route path="tickets/nuevo" element={<CrearTicket />} />
           <Route path="tickets/:id" element={<DetalleTicket />} />
+          <Route path="agentes" element={<Agentes />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/" />} />
