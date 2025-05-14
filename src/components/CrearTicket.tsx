@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
+const CrearTicket: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { crearTicket, clientes, currentUser } = useStore();
   const [error, setError] = useState('');
   
+  // Obtener clienteId de la ubicación si existe
+  const clienteId = location.state?.clienteId || '';
+  
   const [formData, setFormData] = useState({
-    clienteId: clienteId || '',
+    clienteId,
     departamento: currentUser?.departamento || '',
     problema: ''
   });
@@ -31,11 +35,11 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
     : [currentUser?.departamento || ''];
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-6">Crear Nuevo Ticket</h2>
+    <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold mb-6 text-white">Crear Nuevo Ticket</h2>
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
@@ -43,14 +47,14 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {!clienteId && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Cliente
             </label>
             <select
               required
               value={formData.clienteId}
               onChange={(e) => setFormData({...formData, clienteId: e.target.value})}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
             >
               <option value="">Seleccionar cliente...</option>
               {clientes.map(cliente => (
@@ -63,13 +67,13 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Departamento
           </label>
           <select
             value={formData.departamento}
             onChange={(e) => setFormData({...formData, departamento: e.target.value})}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
             disabled={currentUser?.rol !== 'admin'}
           >
             {departamentos.map(dep => (
@@ -83,14 +87,14 @@ const CrearTicket: React.FC<{ clienteId?: string }> = ({ clienteId }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Problema
           </label>
           <textarea
             required
             value={formData.problema}
             onChange={(e) => setFormData({...formData, problema: e.target.value})}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
             rows={4}
           />
         </div>

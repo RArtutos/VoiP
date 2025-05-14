@@ -16,7 +16,8 @@ interface AppState {
   actualizarTicket: (ticketId: string, estado: string, nota?: string) => void;
   crearCliente: (cliente: Omit<Cliente, 'id' | 'fechaRegistro'>) => Cliente;
   actualizarCliente: (id: string, cliente: Partial<Cliente>) => void;
-  crearUsuario: (usuario: Omit<Usuario, 'id'> & { password: string }) => Usuario;
+  crearUsuario: (usuario: Omit<Usuario, 'id'> & { password: string }) => void;
+  actualizarUsuario: (id: string, usuario: Partial<Usuario>) => void;
   getTicketsFiltrados: () => Ticket[];
   canCreateTicketForDepartment: (departamento: string) => boolean;
 }
@@ -130,7 +131,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
 
     const id = `U${Date.now()}`;
-    const nuevoUsuario: Usuario = {
+    const nuevoUsuario: Usuario & { password: string } = {
       ...usuarioData,
       id
     };
@@ -138,8 +139,20 @@ export const useStore = create<AppState>((set, get) => ({
     set(state => ({
       usuarios: [...state.usuarios, nuevoUsuario]
     }));
+  },
 
-    return nuevoUsuario;
+  actualizarUsuario: (id, datosActualizados) => {
+    const { currentUser } = get();
+    
+    if (!currentUser || currentUser.rol !== 'admin') {
+      throw new Error('Solo los administradores pueden actualizar usuarios');
+    }
+
+    set(state => ({
+      usuarios: state.usuarios.map(usuario => 
+        usuario.id === id ? { ...usuario, ...datosActualizados } : usuario
+      )
+    }));
   },
 
   getTicketsFiltrados: () => {
