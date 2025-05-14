@@ -3,9 +3,88 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  @apply bg-gray-900;
+  @apply bg-gray-50;
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2.5 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 hover:border-gray-300 transition-colors;
+  }
+
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-colors;
+  }
+
+  .select {
+    @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-no-repeat bg-right pr-10 transition-colors;
+  }
+
+  .textarea {
+    @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 resize-none transition-colors;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors;
+  }
+
+  .badge-success {
+    @apply bg-green-50 text-green-700 ring-1 ring-green-600/20;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20;
+  }
+
+  .badge-error {
+    @apply bg-red-50 text-red-700 ring-1 ring-red-600/20;
+  }
+
+  .badge-info {
+    @apply bg-blue-50 text-blue-700 ring-1 ring-blue-600/20;
+  }
+
+  .badge-neutral {
+    @apply bg-gray-50 text-gray-700 ring-1 ring-gray-600/20;
+  }
+
+  .table-header {
+    @apply px-6 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+
+  .link {
+    @apply text-blue-600 hover:text-blue-700 font-medium transition-colors;
+  }
+
+  .icon-button {
+    @apply p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
 }
