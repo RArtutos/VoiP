@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Cliente, Ticket, Usuario, LoginCredentials } from '../types';
-import db from '../data/db.json';
+import { supabase } from '../lib/supabase';
 
 interface AppState {
   isLoggedIn: boolean;
@@ -9,48 +9,88 @@ interface AppState {
   tickets: Ticket[];
   usuarios: Usuario[];
   
-  login: (credentials: LoginCredentials) => boolean;
-  logout: () => void;
-  buscarCliente: (numeroCliente: string) => Cliente | null;
-  crearTicket: (clienteId: string, departamento: string, problema: string) => string;
-  actualizarTicket: (ticketId: string, estado: string, nota?: string) => void;
-  crearCliente: (cliente: Omit<Cliente, 'id' | 'fechaRegistro'>) => Cliente;
-  actualizarCliente: (id: string, cliente: Partial<Cliente>) => void;
-  crearUsuario: (usuario: Omit<Usuario, 'id'> & { password: string }) => void;
-  actualizarUsuario: (id: string, usuario: Partial<Usuario>) => void;
-  getTicketsFiltrados: () => Ticket[];
+  login: (credentials: LoginCredentials) => Promise<boolean>;
+  logout: () => Promise<void>;
+  buscarCliente: (numeroCliente: string) => Promise<Cliente | null>;
+  crearTicket: (clienteId: string, departamento: string, problema: string) => Promise<string>;
+  actualizarTicket: (ticketId: string, estado: string, nota?: string) => Promise<void>;
+  crearCliente: (cliente: Omit<Cliente, 'id' | 'fechaRegistro'>) => Promise<Cliente>;
+  actualizarCliente: (id: string, cliente: Partial<Cliente>) => Promise<void>;
+  crearUsuario: (usuario: Omit<Usuario, 'id'> & { password: string }) => Promise<void>;
+  actualizarUsuario: (id: string, usuario: Partial<Usuario>) => Promise<void>;
+  getTicketsFiltrados: () => Promise<Ticket[]>;
   canCreateTicketForDepartment: (departamento: string) => boolean;
+  initializeStore: () => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   isLoggedIn: false,
   currentUser: null,
-  clientes: db.clientes,
-  tickets: db.tickets,
-  usuarios: db.usuarios,
+  clientes: [],
+  tickets: [],
+  usuarios: [],
   
-  login: (credentials) => {
-    const usuario = get().usuarios.find(u => 
-      u.nombreUsuario === credentials.username && 
-      u.password === credentials.password
-    );
+  initializeStore: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (userData) {
+        const { password, ...userWithoutPassword } = userData;
+        set({ isLoggedIn: true, currentUser: userWithoutPassword });
+      }
+    }
     
-    if (usuario) {
-      const { password, ...userWithoutPassword } = usuario;
+    // Load initial data
+    const [clientesRes, ticketsRes, usuariosRes] = await Promise.all([
+      supabase.from('clientes').select('*'),
+      supabase.from('tickets').select('*'),
+      supabase.from('usuarios').select('*')
+    ]);
+    
+    set({
+      clientes: clientesRes.data || [],
+      tickets: ticketsRes.data || [],
+      usuarios: usuariosRes.data || []
+    });
+  },
+  
+  login: async (credentials) => {
+    const { data: userData } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('nombreUsuario', credentials.username)
+      .eq('password', credentials.password)
+      .single();
+      
+    if (userData) {
+      const { password, ...userWithoutPassword } = userData;
       set({ isLoggedIn: true, currentUser: userWithoutPassword });
       return true;
     }
     return false;
   },
   
-  logout: () => set({ isLoggedIn: false, currentUser: null }),
-  
-  buscarCliente: (numeroCliente) => {
-    const clienteEncontrado = get().clientes.find(c => c.numeroCliente === numeroCliente);
-    return clienteEncontrado || null;
+  logout: async () => {
+    await supabase.auth.signOut();
+    set({ isLoggedIn: false, currentUser: null });
   },
   
-  crearTicket: (clienteId, departamento, problema) => {
+  buscarCliente: async (numeroCliente) => {
+    const { data } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('numeroCliente', numeroCliente)
+      .single();
+      
+    return data;
+  },
+  
+  crearTicket: async (clienteId, departamento, problema) => {
     const { currentUser, canCreateTicketForDepartment } = get();
     
     if (!currentUser || !canCreateTicketForDepartment(departamento)) {
@@ -60,17 +100,23 @@ export const useStore = create<AppState>((set, get) => ({
     const ahora = new Date().toISOString();
     const id = `T${Date.now()}`;
     
-    const nuevoTicket: Ticket = {
+    const nuevoTicket = {
       id,
       clienteId,
       estado: 'abierto',
-      departamento: departamento as any,
+      departamento,
       problema,
       notas: [],
       fechaCreacion: ahora,
       fechaActualizacion: ahora,
-      asignadoA: currentUser?.id
+      asignadoA: currentUser.id
     };
+    
+    const { error } = await supabase
+      .from('tickets')
+      .insert(nuevoTicket);
+      
+    if (error) throw error;
     
     set(state => ({
       tickets: [...state.tickets, nuevoTicket]
@@ -79,34 +125,46 @@ export const useStore = create<AppState>((set, get) => ({
     return id;
   },
   
-  actualizarTicket: (ticketId, estado, nota) => {
+  actualizarTicket: async (ticketId, estado, nota) => {
+    const ticket = get().tickets.find(t => t.id === ticketId);
+    if (!ticket) throw new Error('Ticket no encontrado');
+    
+    const actualizacion: any = {
+      estado,
+      fechaActualizacion: new Date().toISOString()
+    };
+    
+    if (nota) {
+      actualizacion.notas = [...ticket.notas, nota];
+    }
+    
+    const { error } = await supabase
+      .from('tickets')
+      .update(actualizacion)
+      .eq('id', ticketId);
+      
+    if (error) throw error;
+    
     set(state => ({
-      tickets: state.tickets.map(t => {
-        if (t.id === ticketId) {
-          const ticketActualizado = { 
-            ...t, 
-            estado: estado as any,
-            fechaActualizacion: new Date().toISOString()
-          };
-          
-          if (nota) {
-            ticketActualizado.notas = [...t.notas, nota];
-          }
-          
-          return ticketActualizado;
-        }
-        return t;
-      })
+      tickets: state.tickets.map(t => 
+        t.id === ticketId ? { ...t, ...actualizacion } : t
+      )
     }));
   },
 
-  crearCliente: (clienteData) => {
+  crearCliente: async (clienteData) => {
     const id = `C${Date.now()}`;
-    const nuevoCliente: Cliente = {
+    const nuevoCliente = {
       ...clienteData,
       id,
       fechaRegistro: new Date().toISOString(),
     };
+
+    const { error } = await supabase
+      .from('clientes')
+      .insert(nuevoCliente);
+      
+    if (error) throw error;
 
     set(state => ({
       clientes: [...state.clientes, nuevoCliente]
@@ -115,7 +173,14 @@ export const useStore = create<AppState>((set, get) => ({
     return nuevoCliente;
   },
 
-  actualizarCliente: (id, datosActualizados) => {
+  actualizarCliente: async (id, datosActualizados) => {
+    const { error } = await supabase
+      .from('clientes')
+      .update(datosActualizados)
+      .eq('id', id);
+      
+    if (error) throw error;
+
     set(state => ({
       clientes: state.clientes.map(cliente => 
         cliente.id === id ? { ...cliente, ...datosActualizados } : cliente
@@ -123,7 +188,7 @@ export const useStore = create<AppState>((set, get) => ({
     }));
   },
 
-  crearUsuario: (usuarioData) => {
+  crearUsuario: async (usuarioData) => {
     const { currentUser } = get();
     
     if (!currentUser || currentUser.rol !== 'admin') {
@@ -131,22 +196,35 @@ export const useStore = create<AppState>((set, get) => ({
     }
 
     const id = `U${Date.now()}`;
-    const nuevoUsuario: Usuario & { password: string } = {
+    const nuevoUsuario = {
       ...usuarioData,
       id
     };
+
+    const { error } = await supabase
+      .from('usuarios')
+      .insert(nuevoUsuario);
+      
+    if (error) throw error;
 
     set(state => ({
       usuarios: [...state.usuarios, nuevoUsuario]
     }));
   },
 
-  actualizarUsuario: (id, datosActualizados) => {
+  actualizarUsuario: async (id, datosActualizados) => {
     const { currentUser } = get();
     
     if (!currentUser || currentUser.rol !== 'admin') {
       throw new Error('Solo los administradores pueden actualizar usuarios');
     }
+
+    const { error } = await supabase
+      .from('usuarios')
+      .update(datosActualizados)
+      .eq('id', id);
+      
+    if (error) throw error;
 
     set(state => ({
       usuarios: state.usuarios.map(usuario => 
@@ -155,19 +233,19 @@ export const useStore = create<AppState>((set, get) => ({
     }));
   },
 
-  getTicketsFiltrados: () => {
-    const { tickets, currentUser } = get();
+  getTicketsFiltrados: async () => {
+    const { currentUser } = get();
     
     if (!currentUser) return [];
     
-    if (currentUser.rol === 'admin') {
-      return tickets;
+    let query = supabase.from('tickets').select('*');
+    
+    if (currentUser.rol !== 'admin') {
+      query = query.or(`departamento.eq.${currentUser.departamento},asignadoA.eq.${currentUser.id}`);
     }
     
-    return tickets.filter(ticket => 
-      ticket.departamento === currentUser.departamento ||
-      ticket.asignadoA === currentUser.id
-    );
+    const { data } = await query;
+    return data || [];
   },
 
   canCreateTicketForDepartment: (departamento) => {
@@ -177,3 +255,6 @@ export const useStore = create<AppState>((set, get) => ({
     return currentUser.departamento === departamento;
   }
 }));
+
+// Initialize store on app load
+useStore.getState().initializeStore();

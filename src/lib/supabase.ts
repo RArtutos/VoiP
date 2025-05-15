@@ -1,15 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../types/supabase';
 
-// Conexión a Supabase/PostgreSQL
-// En producción, estas variables deberían venir de variables de entorno
-const supabaseUrl = 'https://supabase.example.com';
-const supabaseKey = 'your-supabase-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Esta es la URL de conexión directa a PostgreSQL proporcionada
-export const postgresUrl = 'postgresql://teldrive_owner:2brOqFGx0VRM@ep-delicate-union-a58t2isw-pooler.us-east-2.aws.neon.tech/voip?sslmode=require';
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
-// Creamos el cliente de Supabase
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Nota: En una implementación real, configurarías correctamente
-// la conexión a la base de datos y establecerías las tablas necesarias
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
