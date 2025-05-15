@@ -1,0 +1,14 @@
+{
+  "clientes": [],
+  "tickets": [],
+  "usuarios": [
+    {
+      "id": "admin1",
+      "nombreUsuario": "admin",
+      "nombre": "Administrador",
+      "rol": "admin",
+      "departamento": "general",
+      "password": "admin123"
+    }
+  ]
+}
