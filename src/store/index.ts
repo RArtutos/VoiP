@@ -60,19 +60,27 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   login: async (credentials) => {
-    const { data: userData } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('nombreUsuario', credentials.username)
-      .eq('password', credentials.password)
-      .single();
-      
-    if (userData) {
+    try {
+      // Check if user exists in usuarios table
+      const { data: users, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('nombreusuario', credentials.username)
+        .eq('password', credentials.password);
+
+      if (userError || !users || users.length === 0) {
+        console.error('Invalid username or password');
+        return false;
+      }
+
+      const userData = users[0];
       const { password, ...userWithoutPassword } = userData;
       set({ isLoggedIn: true, currentUser: userWithoutPassword });
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   },
   
   logout: async () => {
