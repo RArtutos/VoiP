@@ -19,7 +19,7 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isLoggedIn = useStore(state => state.isLoggedIn);
   
   if (!isLoggedIn) {
-    return <Navigate to="/login" />;
+    return <Navigate to="./login" />;
   }
   
   return <>{children}</>;
@@ -27,7 +27,7 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/login" element={<Login />} />
         
